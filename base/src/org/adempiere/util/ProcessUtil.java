@@ -57,13 +57,18 @@ public final class ProcessUtil {
 	 * @return boolean
 	 */
 	public static boolean startDatabaseProcedure (ProcessInfo processInfo, String ProcedureName, Trx trx, boolean managedTrx) {
-		String sql = "{call " + ProcedureName + "(?)}";
+		String sql = "{call " + ProcedureName + "(?,?)}";
 		String trxName = trx != null ? trx.getTrxName() : null;
 		try
 		{
 			//hengsin, add trx support, updateable support.
 			CallableStatement cstmt = DB.prepareCall(sql, ResultSet.CONCUR_UPDATABLE, trxName);	
 			cstmt.setInt(1, processInfo.getAD_PInstance_ID());
+			// aggiungo nuovo parametro 
+			String listString = processInfo.getSelectionKeys().toString();
+			listString = listString.substring(1, listString.length()-1); 
+			cstmt.setString(2, listString);
+			// fine aggiunta parametro
 			cstmt.executeUpdate();
 			cstmt.close();
 			if (trx != null && trx.isActive() && managedTrx)
